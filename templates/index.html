@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspberry Pi Rover</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="camera-feed">
+            <h2>Camera Feed</h2>
+            <img id="video" src="{{ url_for('video_feed') }}" alt="Camera Feed">
+        </div>
+        <div class="controls">
+            <h2>Controls</h2>
+            <button onclick="sendCommand('up')">⬆️ Up</button>
+            <div>
+                <button onclick="sendCommand('left')">⬅️ Left</button>
+                <button onclick="sendCommand('right')">➡️ Right</button>
+            </div>
+            <button onclick="sendCommand('down')">⬇️ Down</button>
+        </div>
+    </div>
+
+    <script>
+        function sendCommand(command) {
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `command=${command}`
+            });
+        }
+    </script>
+</body>
+</html>
