@@ -34,6 +34,7 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
 
 # Load user for Flask-Login
 @login_manager.user_loader
