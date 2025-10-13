@@ -1,19 +1,35 @@
 from flask import Flask, render_template, Response, request, redirect, url_for, flash
 import cv2
 import dotenv
+from dotenv import load_dotenv
 import os
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 
-# Load environment variables
-dotenv.load_dotenv()
+# # Load environment variables
+# dotenv.load_dotenv()
 
-# Initialize Flask app
+# # Initialize Flask app
+# app = Flask(__name__)
+# app.secret_key = os.getenv('MY_SECRET_KEY')  # From .env
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable to save resources
+
+
+from dotenv import load_dotenv
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = os.getenv('MY_SECRET_KEY')  # From .env
+app.config['SECRET_KEY'] = os.getenv('MY_SECRET_KEY') or os.urandom(32)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable to save resources
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+
+
+
+
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
@@ -119,7 +135,7 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    print(f"User {current_user.username} accessed index. Secret Key: {os.getenv('MY_SECRET_KEY')}")
+    # print(f"User {current_user.username} accessed index. Secret Key: {os.getenv('MY_SECRET_KEY')}")
     return render_template('index.html', username=current_user.username)
 
 
