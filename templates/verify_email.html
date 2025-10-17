@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="login-title">Verify Email</h1>
+        <p class="login-subtitle">Enter the verification code sent to your email</p>
+        <form method="POST" class="login-form">
+            <input type="text" name="username" placeholder="Username" value="{{ username }}" readonly class="input-field">
+            <input type="text" name="code" placeholder="Verification Code" required class="input-field">
+            <button type="submit" class="btn-primary">Verify</button>
+        </form>
+        <p class="register-text">
+            Didn't receive the code? <a href="{{ url_for('register') }}" class="btn-register">Resend</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f8f9fa;
+        font-family: 'Montserrat', sans-serif;
+        margin: 0;
+    }
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 20px;
+    }
+    .login-card {
+        background-color: #fff;
+        padding: 40px 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    .login-title {
+        font-size: 32px;
+        color: #0a8f0a;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+    .login-subtitle {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 30px;
+    }
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .input-field {
+        padding: 12px 15px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+    .input-field:focus {
+        border-color: #0a8f0a;
+    }
+    .btn-primary {
+        padding: 12px 0;
+        background-color: #0a8f0a;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
+    .btn-primary:hover {
+        background-color: #087607;
+    }
+    .register-text {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #555;
+    }
+    .btn-register {
+        color: #0a8f0a;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 5px;
+    }
+    .btn-register:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

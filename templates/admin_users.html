@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin: Approve Users</h2>
+{% for user in users %}
+    <form method="POST" style="margin-bottom:10px;">
+        {{ user.username }} ({{ user.email }})
+        <input type="hidden" name="user_id" value="{{ user.id }}">
+        <button type="submit">Approve as Operator</button>
+    </form>
+{% else %}
+<p>No users to approve.</p>
+{% endfor %}
+{% endblock %}

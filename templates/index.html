@@ -1,51 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rover Buddy</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div style="text-align: center; margin: 30px 0;">
-        <h1 style="font-family: 'Montserrat', sans-serif; font-size: 36px; font-weight: 700; color: #0a8f0a; margin: 0; letter-spacing: 1px;">
-            WebRover Controller
-        </h1>
-        <p style="font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 400; color: #666; margin: 5px 0 0;">
-            Control Your Rover with Ease
-        </p>
-    </div>
-    <div style="text-align: center; margin-bottom: 20px;">
-        <p style="font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333;">
-            Logged in as {{ current_user.username }} | 
-            <a href="{{ url_for('logout') }}" style="color: #007BFF; text-decoration: none; font-weight: 500;">Logout</a>
-        </p>
-    </div>
-    <div class="container">
-        <div class="camera-feed">
-            <h2 style="font-family: 'Montserrat', sans-serif; font-weight: 600; color: #333;">Camera Feed</h2>
-            <img id="video" src="{{ url_for('video_feed') }}" alt="Camera Feed">
-        </div>
-        <div class="controls">
-            <h2 style="font-family: 'Montserrat', sans-serif; font-weight: 600; color: #333;">Controls</h2>
-            <button onclick="sendCommand('up')" style="padding: 10px 20px; background-color: #0a8f0a; color: white; border: none; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 16px; cursor: pointer; margin: 5px;">⬆️ Up</button>
-            <div style="display: flex; justify-content: center; gap: 10px; margin: 10px 0;">
-                <button onclick="sendCommand('left')" style="padding: 10px 20px; background-color: #0a8f0a; color: white; border: none; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 16px; cursor: pointer;">⬅️ Left</button>
-                <button onclick="sendCommand('right')" style="padding: 10px 20px; background-color: #0a8f0a; color: white; border: none; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 16px; cursor: pointer;">➡️ Right</button>
-            </div>
-            <button onclick="sendCommand('down')" style="padding: 10px 20px; background-color: #0a8f0a; color: white; border: none; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 16px; cursor: pointer; margin: 5px;">⬇️ Down</button>
-        </div>
-    </div>
-
-    <script>
-        function sendCommand(command) {
-            fetch('/control', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `command=${command}`
-            });
-        }
-    </script>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<h2>Welcome {{ current_user.username }}</h2>
+{% if current_user.role == 'operator' or current_user.role == 'admin' %}
+<p>You can operate the robot.</p>
+{% else %}
+<p>Wait for admin approval to control the robot.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Admin Dashboard</h1>
+        <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% set category, message = messages[0] %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- User Management Table -->
+    <div class="user-management">
+        <h2>User Management</h2>
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role }}</td>
+                <td>
+                    {% if user.role == 'viewer' %}
+                        {% if not existing_operator %}
+                            <a href="{{ url_for('approve_operator', user_id=user.id) }}" class="btn-primary">Promote to Operator</a>
+                        {% else %}
+                            <span>Operator exists</span>
+                        {% endif %}
+                    {% elif user.role == 'operator' %}
+                        <a href="{{ url_for('demote_operator', user_id=user.id) }}" class="btn-primary">Demote to Viewer</a>
+                    {% endif %}
+                    {% if user.role != 'admin' %}
+                        <a href="{{ url_for('remove_user', user_id=user.id) }}" class="btn-primary">Remove</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Camera Section -->
+    <div class="camera-section">
+        <div class="video-wrapper">
+            <video id="video" width="640" height="480" autoplay playsinline></video>
+            <div id="noCameraMessage">No Camera Detected</div>
+        </div>
+        <canvas id="snapshot" width="640" height="480" style="display:none;"></canvas>
+
+        <div class="camera-buttons">
+            <button id="snapshotBtn" class="btn-primary" disabled>Take Snapshot</button>
+            <button id="startBtn" class="btn-primary" disabled>Start Recording</button>
+            <button id="stopBtn" class="btn-primary" disabled>Stop Recording</button>
+        </div>
+        <div id="timer" class="recording-timer">00:00</div>
+    </div>
+</div>
+
+<script>
+let mediaStream = null;
+let mediaRecorder;
+let recordedChunks = [];
+let timerInterval;
+let seconds = 0;
+
+// Elements
+const video = document.getElementById('video');
+const noCam = document.getElementById('noCameraMessage');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const snapshotBtn = document.getElementById('snapshotBtn');
+const timerDisplay = document.getElementById('timer');
+
+// Try to access webcam
+navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+.then(stream => {
+    mediaStream = stream;
+    video.srcObject = stream;
+    noCam.style.display = "none";
+    snapshotBtn.disabled = false;
+    startBtn.disabled = false;
+})
+.catch(() => {
+    noCam.style.display = "flex";
+    video.style.display = "none";
+});
+
+// ----------- SNAPSHOT FUNCTION -----------
+snapshotBtn.addEventListener('click', () => {
+    if (!mediaStream) return alert("No camera detected.");
+    const canvas = document.getElementById('snapshot');
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageURL = canvas.toDataURL("image/png");
+    const a = document.createElement('a');
+    a.href = imageURL;
+    a.download = 'snapshot.png';
+    a.click();
+    alert("Snapshot saved!");
+});
+
+// ----------- RECORDING FUNCTIONS -----------
+startBtn.addEventListener('click', () => {
+    if (!mediaStream) return alert("No camera detected.");
+
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream);
+    mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = saveRecording;
+
+    mediaRecorder.start();
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    seconds = 0;
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+});
+
+stopBtn.addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+        clearInterval(timerInterval);
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        timerDisplay.textContent = "00:00";
+    }
+});
+
+function saveRecording() {
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recording.webm';
+    a.click();
+    alert("Recording saved!");
+}
+
+function updateTimer() {
+    seconds++;
+    const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const secs = String(seconds % 60).padStart(2, '0');
+    timerDisplay.textContent = `${mins}:${secs}`;
+}
+</script>
+
+<style>
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+}
+
+.dashboard-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.btn-logout {
+    background: #e74c3c;
+    color: white;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+.btn-logout:hover {
+    background: #c0392b;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    margin: 20px auto;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+}
+#noCameraMessage {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 20, 20, 0.9);
+    color: white;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.camera-buttons {
+    text-align: center;
+    margin-top: 10px;
+}
+.recording-timer {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    margin-top: 10px;
+}
+</style>
+{% endblock %}

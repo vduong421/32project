@@ -1,42 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Rover Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>{% block title %}WebRover{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
         }
-        .flash-messages {
-            max-width: 400px;
-            margin: 20px auto;
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
             text-align: center;
         }
-        .flash-messages p {
-            background-color: #ffebee;
-            color: #d32f2f;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 5px 0;
+        h1 { color: #0a8f0a; margin-bottom: 8px; }
+        p { color: #666; margin-bottom: 30px; }
+        .btn-primary {
+            padding: 10px 20px;
+            background-color: #0a8f0a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
         }
+        .btn-primary:hover { background-color: #087607; }
+        .input-field {
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 15px;
+        }
+        .input-field:focus { border-color: #0a8f0a; }
+        .flash { margin: 10px 0; font-size: 14px; }
+        .flash-success { color: green; }
+        .flash-danger { color: red; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 12px; text-align: center; }
+        th { background-color: #f5f5f5; }
+        a { text-decoration: none; color: #0a8f0a; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+        .camera-section {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .camera-buttons button { margin: 10px; }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="flash-messages">
-        {% with messages = get_flashed_messages() %}
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for message in messages %}
-                    <p>{{ message }}</p>
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
+        {% block content %}{% endblock %}
     </div>
-    {% if current_user.is_authenticated %}
-        <p style="text-align: center;">Logged in as {{ current_user.username }} | <a href="{{ url_for('logout') }}" style="color: #007BFF; text-decoration: none;">Logout</a></p>
-    {% endif %}
-    {% block content %}{% endblock %}
 </body>
 </html>

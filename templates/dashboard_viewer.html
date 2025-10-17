@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-container">
+    <h1 class="dashboard-title">Viewer Dashboard</h1>
+    <p class="dashboard-subtitle">View the camera feed and take snapshots/recordings</p>
+
+    <div class="camera-section">
+        <video id="video" width="640" height="480" autoplay></video>
+        <canvas id="snapshot" width="640" height="480" style="display:none;"></canvas>
+        <div class="camera-buttons">
+            <button onclick="takeSnapshot()" class="btn-primary">Take Snapshot</button>
+            <button onclick="startRecording()" class="btn-primary">Start Recording</button>
+            <button onclick="stopRecording()" class="btn-primary">Stop Recording</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const video = document.getElementById('video');
+navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+.then(stream => video.srcObject = stream)
+.catch(err => console.error("Camera error:", err));
+
+function takeSnapshot() {
+    const canvas = document.getElementById('snapshot');
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    alert("Snapshot taken!");
+}
+
+let mediaRecorder;
+let recordedChunks = [];
+
+function startRecording() {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(video.srcObject);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.start();
+    alert("Recording started");
+}
+
+function stopRecording() {
+    mediaRecorder.stop();
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'recording.webm';
+        a.click();
+        alert("Recording saved");
+    };
+}
+</script>
+
+<style>
+.dashboard-container { max-width: 900px; margin: 50px auto; text-align: center; }
+.dashboard-title { font-size: 32px; color: #0a8f0a; margin-bottom: 8px; font-weight: 700; }
+.dashboard-subtitle { font-size: 16px; color: #666; margin-bottom: 30px; }
+.btn-primary { padding: 8px 15px; background-color: #0a8f0a; color: white; border: none; border-radius: 6px; cursor: pointer; }
+.btn-primary:hover { background-color: #087607; }
+.camera-section { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.camera-buttons button { margin: 10px; }
+</style>
+{% endblock %}
