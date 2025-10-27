@@ -1,11 +1,20 @@
+<<<<<<< HEAD
 from flask import Flask, render_template, redirect, url_for, flash, request, Response, jsonify
 from flask_sqlalchemy import SQLAlchemy
+=======
+from flask import Flask, render_template, Response, request, redirect, url_for, flash
+import cv2
+import dotenv
+from dotenv import load_dotenv
+import os
+>>>>>>> 3f69b851e8484533ba46c42f46f53e0e540ba322
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
 import cv2
 import platform
 
+<<<<<<< HEAD
 # ---------------------- GPIO Setup ----------------------
 IS_PI = platform.system() == "Linux"
 
@@ -36,6 +45,31 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+=======
+# # Load environment variables
+# dotenv.load_dotenv()
+
+# # Initialize Flask app
+# app = Flask(__name__)
+# app.secret_key = os.getenv('MY_SECRET_KEY')  # From .env
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable to save resources
+
+
+from dotenv import load_dotenv
+load_dotenv()
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('MY_SECRET_KEY') or os.urandom(32)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+
+
+
+
+>>>>>>> 3f69b851e8484533ba46c42f46f53e0e540ba322
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -168,8 +202,14 @@ def logout():
 # ---------------------- Dashboards ----------------------
 @app.route('/dashboard_viewer')
 @login_required
+<<<<<<< HEAD
 def dashboard_viewer():
     return render_template('dashboard_viewer.html')
+=======
+def index():
+    # print(f"User {current_user.username} accessed index. Secret Key: {os.getenv('MY_SECRET_KEY')}")
+    return render_template('index.html', username=current_user.username)
+>>>>>>> 3f69b851e8484533ba46c42f46f53e0e540ba322
 
 @app.route('/dashboard_operator')
 @login_required
