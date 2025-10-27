@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="dashboard-container">
-    <h1 class="dashboard-title">Viewer Dashboard</h1>
-    <p class="dashboard-subtitle">View the camera feed and take snapshots/recordings</p>
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Viewer Dashboard</h1>
+        <div class="dashboard-actions">
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+        </div>
+    </div>
+
+    <p class="dashboard-subtitle">View the camera feed and take snapshots or recordings</p>
 
     <div class="camera-section">
         <video id="video" width="640" height="480" autoplay></video>
@@ -54,12 +60,66 @@ function stopRecording() {
 </script>
 
 <style>
-.dashboard-container { max-width: 900px; margin: 50px auto; text-align: center; }
-.dashboard-title { font-size: 32px; color: #0a8f0a; margin-bottom: 8px; font-weight: 700; }
-.dashboard-subtitle { font-size: 16px; color: #666; margin-bottom: 30px; }
-.btn-primary { padding: 8px 15px; background-color: #0a8f0a; color: white; border: none; border-radius: 6px; cursor: pointer; }
-.btn-primary:hover { background-color: #087607; }
-.camera-section { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-.camera-buttons button { margin: 10px; }
+.dashboard-container { 
+    max-width: 900px; 
+    margin: 50px auto; 
+    text-align: center; 
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.dashboard-title { 
+    font-size: 32px; 
+    color: #0a8f0a; 
+    font-weight: 700; 
+    margin: 0;
+}
+
+.dashboard-subtitle { 
+    font-size: 16px; 
+    color: #666; 
+    margin-bottom: 30px; 
+}
+
+.btn-primary { 
+    padding: 8px 15px; 
+    background-color: #0a8f0a; 
+    color: white; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+}
+.btn-primary:hover { 
+    background-color: #087607; 
+}
+
+.btn-logout {
+    background-color: #d9534f;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+.btn-logout:hover {
+    background-color: #c9302c;
+}
+
+.camera-section { 
+    background: #fff; 
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+}
+
+.camera-buttons button { 
+    margin: 10px; 
+}
 </style>
 {% endblock %}

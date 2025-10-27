@@ -2,9 +2,6 @@ from flask import Flask, render_template, redirect, url_for, flash, request, Res
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-import random
 import re
 import cv2
 import platform
@@ -51,30 +48,10 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), default='viewer')  # viewer, operator, admin
-    otp = db.Column(db.String(6))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-# ---------------------- SendGrid Utility ----------------------
-SENDGRID_API_KEY = 'YOUR_SENDGRID_API_KEY'
-VERIFIED_EMAIL = 'your_verified_email@domain.com'
-
-def send_otp(email, otp_code):
-    message = Mail(
-        from_email=VERIFIED_EMAIL,
-        to_emails=email,
-        subject='Your OTP Verification Code',
-        plain_text_content=f'Your verification code is: {otp_code}'
-    )
-    try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        sg.send(message)
-        return True
-    except Exception as e:
-        print("SendGrid error:", e)
-        return False
 
 # ---------------------- Camera ----------------------
 camera = cv2.VideoCapture(0)
@@ -129,54 +106,33 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
+        # Validation
         if User.query.filter_by(username=username).first():
             flash("Username already exists.", "danger")
             return redirect(url_for('register'))
+
         if User.query.filter_by(email=email).first():
             flash("Email already registered.", "danger")
             return redirect(url_for('register'))
+
         if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
             flash("Invalid email format.", "danger")
             return redirect(url_for('register'))
+
         if not re.match(r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$', password):
-            flash("Password must be at least 8 chars, include 1 uppercase, 1 number, 1 special char.", "danger")
+            flash("Password must be at least 8 chars, include 1 uppercase, 1 number, and 1 special character.", "danger")
             return redirect(url_for('register'))
 
         hashed_password = generate_password_hash(password)
-        otp_code = str(random.randint(100000, 999999))
-        user = User(username=username, email=email, password=hashed_password, otp=otp_code)
-        db.session.add(user)
+        new_user = User(username=username, email=email, password=hashed_password, role='viewer')
+        db.session.add(new_user)
         db.session.commit()
 
-        if send_otp(email, otp_code):
-            flash("Account created! Check your email for OTP.", "success")
-            return redirect(url_for('verify_email', username=username))
-        else:
-            flash("Failed to send OTP. Please try again.", "danger")
-            return redirect(url_for('register'))
+        login_user(new_user)
+        flash("Registration successful! Welcome to Viewer Dashboard.", "success")
+        return redirect(url_for('dashboard_viewer'))
 
     return render_template('register.html')
-
-# ---------------------- Verify Email ----------------------
-@app.route('/verify_email/<username>', methods=['GET', 'POST'])
-def verify_email(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    if request.method == 'POST':
-        otp_input = request.form['code']
-        if otp_input == user.otp:
-            user.otp = None
-            db.session.commit()
-            login_user(user)
-            if user.role == 'admin':
-                return redirect(url_for('dashboard_admin'))
-            elif user.role == 'operator':
-                return redirect(url_for('dashboard_operator'))
-            else:
-                flash("Email verified! You are now logged in.", "success")
-                return redirect(url_for('dashboard_viewer'))
-        else:
-            flash("Wrong OTP.", "danger")
-    return render_template('verify_email.html', username=user.username)
 
 # ---------------------- Login ----------------------
 @app.route('/login', methods=['GET', 'POST'])
@@ -197,7 +153,8 @@ def login():
                 flash(f"Welcome {user.username}!", "success")
                 return redirect(url_for('dashboard_viewer'))
         else:
-            flash("Invalid credentials.", "danger")
+            flash("Invalid username or password.", "danger")
+
     return render_template('login.html')
 
 # ---------------------- Logout ----------------------
@@ -300,3 +257,4 @@ if __name__ == "__main__":
         db.create_all()
         create_default_admin()
     app.run(host="0.0.0.0", port=5000, debug=True)
+
