@@ -1,2 +1,5 @@
 .env
+venv
+_pycache_/
 OLD_FILE/
+"#code_structure.pdf"

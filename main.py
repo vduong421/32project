@@ -6,23 +6,37 @@ import re
 import cv2
 import platform
 import os
+import serial
+import time
 from dotenv import load_dotenv
 
 # ---------------------- Load Environment ----------------------
 load_dotenv()
 
-# ---------------------- GPIO Setup ----------------------
+# ---------------------- GPIO + Arduino Setup ----------------------
 IS_PI = platform.system() == "Linux"
 
 if IS_PI:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
     print("Running on Raspberry Pi: GPIO enabled")
+
+    # ----- Arduino Serial Setup (for motor control via Arduino) -----
+    SERIAL_PORT = os.getenv("ARDUINO_PORT", "/dev/ttyACM0")
+    BAUD_RATE = 9600
+    try:
+        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        time.sleep(2)  # allow Arduino to reset
+        print(f"Connected to Arduino on {SERIAL_PORT} at {BAUD_RATE} baud")
+    except Exception as e:
+        ser = None
+        print(f"Failed to open Arduino serial port: {e}")
 else:
     print("Not running on Raspberry Pi: GPIO simulated")
     from gpiozero import LED, Device
     from gpiozero.pins.mock import MockFactory
     Device.pin_factory = MockFactory()
+    ser = None
 
 # Robot pins
 PIN_FORWARD = 17
@@ -78,15 +92,37 @@ def video_feed():
 
 # ---------------------- Robot Movement ----------------------
 def move_robot(direction):
-    if IS_PI:
+    # If running on Pi and Arduino serial is available, send the same commands
+    # your friend's test Flask app used: F, B, L, R, S.
+    if IS_PI and ser is not None:
+        try:
+            if direction == "forward":
+                ser.write(b"F")
+            elif direction == "backward":
+                ser.write(b"B")
+            elif direction == "left":
+                ser.write(b"L")
+               
+            elif direction == "right":
+                ser.write(b"R")
+            elif direction == "stop":
+                ser.write(b"S")
+        except Exception as e:
+            print(f"Serial error while sending '{direction}': {e}")
+    elif IS_PI:
+        # Fallback to direct GPIO control if serial is not available
         GPIO.output(PIN_FORWARD, GPIO.LOW)
         GPIO.output(PIN_BACKWARD, GPIO.LOW)
         GPIO.output(PIN_LEFT, GPIO.LOW)
         GPIO.output(PIN_RIGHT, GPIO.LOW)
-        if direction == "forward": GPIO.output(PIN_FORWARD, GPIO.HIGH)
-        elif direction == "backward": GPIO.output(PIN_BACKWARD, GPIO.HIGH)
-        elif direction == "left": GPIO.output(PIN_LEFT, GPIO.HIGH)
-        elif direction == "right": GPIO.output(PIN_RIGHT, GPIO.HIGH)
+        if direction == "forward":
+            GPIO.output(PIN_FORWARD, GPIO.HIGH)
+        elif direction == "backward":
+            GPIO.output(PIN_BACKWARD, GPIO.HIGH)
+        elif direction == "left":
+            GPIO.output(PIN_LEFT, GPIO.HIGH)
+        elif direction == "right":
+            GPIO.output(PIN_RIGHT, GPIO.HIGH)
     else:
         print(f"Simulated move: {direction}")
 
