@@ -1,17 +1,103 @@
 {% extends "base.html" %}
+
+{% block title %}Login · WebRover{% endblock %}
+
+{% block background %}
+<video class="bg-video" autoplay muted loop playsinline>
+    <source src="{{ url_for('static', filename='stock/access.mp4') }}" type="video/mp4">
+</video>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.auth-wrapper {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Card: white with soft shadow, green accent */
+.auth-card {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 24px;
+    padding: 34px 30px 26px;
+    width: 100%;
+    max-width: 430px;
+    text-align: center;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.25);
+    border: 1px solid rgba(10, 143, 10, 0.18);
+    color: #222;
+}
+
+/* Title in green like landing page */
+.auth-title {
+    font-size: 30px;
+    font-weight: 700;
+    color: #0a8f0a;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 22px;
+}
+
+/* Inputs */
+.auth-form .input-field {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    color: #222;
+}
+
+.auth-form .input-field::placeholder {
+    color: #999;
+}
+
+.auth-form .input-field:focus {
+    border-color: #0a8f0a;
+    box-shadow: 0 0 0 2px rgba(10,143,10,0.08);
+}
+
+/* Full-width green button */
+.auth-form .btn-primary {
+    width: 100%;
+    margin-top: 8px;
+    background-color: #0a8f0a;
+    color: #ffffff;
+    font-size: 17px;
+    border-radius: 14px;
+    padding: 12px 0;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+}
+
+.auth-form .btn-primary:hover {
+    background-color: #0a7c0a;
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.3);
+}
+
+/* Switch text */
+.switch-text {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #666;
+}
+
+.switch-text a {
+    color: #0a8f0a;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="auth-container">
+<div class="auth-wrapper">
     <div class="auth-card">
         <h1 class="auth-title">WebRover Controller</h1>
-        <p class="auth-subtitle">Control Your Rover with Ease</p>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <p class="auth-subtitle">Login to control or monitor your rover.</p>
 
         <form method="POST" class="auth-form">
             <input type="text" name="username" placeholder="Username" required class="input-field">
@@ -20,132 +106,10 @@
         </form>
 
         <p class="switch-text">
-            Don't have an account? <a href="{{ url_for('register') }}" class="btn-switch">Register</a>
+            Don’t have an account?
+            <a href="{{ url_for('register') }}">Register</a>
         </p>
     </div>
 </div>
-
-<style>
-html, body {
-    height: 100%;
-    margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    background-color: #e0e0e0; /* light gray background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 20px;
-}
-
-.auth-card {
-    background: rgba(0, 0, 50, 0.75);
-    border-radius: 20px;
-    padding: 40px 30px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 150, 255, 0.3);
-}
-
-.auth-title {
-    font-size: 36px;
-    color: #00bfff;
-    margin-bottom: 10px;
-    font-weight: 700;
-    text-shadow: 0 0 10px #00bfff, 0 0 20px #00bfff;
-}
-
-.auth-subtitle {
-    font-size: 16px;
-    color: #a0d8ff;
-    margin-bottom: 30px;
-}
-
-.flash {
-    margin-bottom: 15px;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: 500;
-    text-align: center;
-    font-size: 14px;
-}
-.flash-success { background-color: rgba(0, 255, 255, 0.2); color: #0ff; }
-.flash-danger { background-color: rgba(255, 50, 50, 0.2); color: #f55; }
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center; /* center inputs horizontally */
-}
-
-.input-field {
-    width: 100%;
-    padding: 14px 18px;
-    font-size: 16px;
-    border: 1px solid rgba(0,150,255,0.5);
-    border-radius: 12px;
-    outline: none;
-    background: rgba(0,0,50,0.5);
-    color: #c0eaff;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    text-align: center; /* center placeholder text */
-}
-.input-field::placeholder {
-    color: #80dfff;
-}
-.input-field:focus {
-    border-color: #00bfff;
-    box-shadow: 0 0 10px #00bfff;
-}
-
-.btn-primary {
-    width: 100%;
-    padding: 14px 0;
-    background-color: rgba(0,191,255,0.3);
-    color: #fff;
-    border: 1px solid #00bfff;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-shadow: 0 0 5px #00bfff;
-}
-.btn-primary:hover {
-    background-color: rgba(0,191,255,0.6);
-    box-shadow: 0 0 20px #00bfff;
-}
-
-.switch-text {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #a0d8ff;
-}
-.btn-switch {
-    color: #00bfff;
-    text-decoration: none;
-    font-weight: 600;
-    transition: 0.3s;
-}
-.btn-switch:hover {
-    text-decoration: underline;
-    color: #00f;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>
 {% endblock %}
+
