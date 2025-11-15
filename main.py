@@ -260,12 +260,26 @@ def remove_user(user_id):
 
 # ---------------------- Auto-create Admin ----------------------
 def create_default_admin():
-    if not User.query.filter_by(username='SarRobot').first():
-        hashed_password = generate_password_hash("Admin@123")
-        admin = User(username='admin', email='admin@gmail.com', password=hashed_password, role='admin')
+    # Check for existing admin by email or username
+    admin = User.query.filter(
+        (User.username == 'Admin') | 
+        (User.email == 'admin@gmail.com')
+    ).first()
+
+    if not admin:
+        hashed_password = generate_password_hash("Thisisadmin01!")
+        admin = User(
+            username='Admin',
+            email='admin@gmail.com',
+            password=hashed_password,
+            role='admin'
+        )
         db.session.add(admin)
         db.session.commit()
-        print("Default admin SarRobot created!")
+        print("Default admin created!")
+    else:
+        print("Admin already exists. Skipping creation.")
+
 
 # ---------------------- Run App ----------------------
 if __name__ == "__main__":
