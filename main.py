@@ -101,7 +101,18 @@ def move(direction):
 # ---------------------- Routes ----------------------
 @app.route('/')
 def home():
-    return redirect(url_for('login'))
+    # If user already logged in, send them to their dashboard directly
+    if current_user.is_authenticated:
+        if current_user.role == 'admin':
+            return redirect(url_for('dashboard_admin'))
+        elif current_user.role == 'operator':
+            return redirect(url_for('dashboard_operator'))
+        else:
+            return redirect(url_for('dashboard_viewer'))
+
+    # Otherwise show the landing page with base video
+    return render_template('index.html')
+
 
 # ---------------------- Register ----------------------
 @app.route('/register', methods=['GET', 'POST'])
@@ -250,8 +261,8 @@ def remove_user(user_id):
 # ---------------------- Auto-create Admin ----------------------
 def create_default_admin():
     if not User.query.filter_by(username='SarRobot').first():
-        hashed_password = generate_password_hash("ThisisSAR01!")
-        admin = User(username='SarRobot', email='sarrobot@domain.com', password=hashed_password, role='admin')
+        hashed_password = generate_password_hash("Admin@123")
+        admin = User(username='admin', email='admin@gmail.com', password=hashed_password, role='admin')
         db.session.add(admin)
         db.session.commit()
         print("Default admin SarRobot created!")
