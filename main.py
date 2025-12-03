@@ -13,11 +13,14 @@ from dotenv import load_dotenv
 # ---------------------- Load Environment ----------------------
 load_dotenv()
 
-# ---------------------- GPIO + Arduino Setup ----------------------
+# ---------------------- GPIO + Arduino + Camera Setup ----------------------
 IS_PI = platform.system() == "Linux"
 
 if IS_PI:
     import RPi.GPIO as GPIO
+    from picamera2 import Picamera2
+    import threading
+
     GPIO.setmode(GPIO.BCM)
     print("Running on Raspberry Pi: GPIO enabled")
 
@@ -72,18 +75,45 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ---------------------- Camera ----------------------
-camera = cv2.VideoCapture(0)
+# ---------------------- Camera (PiCamera2 when on Pi, cv2.VideoCapture otherwise) ----------------------
+if IS_PI:
+    picam2 = Picamera2()
+    picam2.configure(picam2.create_video_configuration(main={"size": (640, 480)}))
+    picam2.start()
+    frame_lock = threading.Lock()
+    camera = None
+else:
+    picam2 = None
+    frame_lock = None
+    camera = cv2.VideoCapture(0)
 
 def generate_frames():
     while True:
-        success, frame = camera.read()
-        if not success:
-            continue
-        _, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        if IS_PI and picam2 is not None:
+            # Raspberry Pi: use Picamera2 (same style as your friend's working code)
+            with frame_lock:
+                frame = picam2.capture_array()
+
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            ret, buffer = cv2.imencode(".jpg", frame)
+            if not ret:
+                continue
+        else:
+            # Laptop / non-Pi: fall back to local webcam
+            if camera is None:
+                break
+            success, frame = camera.read()
+            if not success:
+                continue
+            ret, buffer = cv2.imencode(".jpg", frame)
+            if not ret:
+                continue
+
+        frame_bytes = buffer.tobytes()
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
+        )
 
 @app.route('/video_feed')
 @login_required
@@ -92,8 +122,7 @@ def video_feed():
 
 # ---------------------- Robot Movement ----------------------
 def move_robot(direction):
-    # If running on Pi and Arduino serial is available, send the same commands
-    # your friend's test Flask app used: F, B, L, R, S.
+    # If running on Pi and Arduino serial is available, send commands: F, B, L, R, S
     if IS_PI and ser is not None:
         try:
             if direction == "forward":
@@ -102,11 +131,13 @@ def move_robot(direction):
                 ser.write(b"B")
             elif direction == "left":
                 ser.write(b"L")
-               
             elif direction == "right":
                 ser.write(b"R")
             elif direction == "stop":
                 ser.write(b"S")
+            else:
+                # Unknown extra commands (light/storage toggles etc.)
+                print(f"Unknown direction command received: {direction}")
         except Exception as e:
             print(f"Serial error while sending '{direction}': {e}")
     elif IS_PI:
@@ -115,6 +146,7 @@ def move_robot(direction):
         GPIO.output(PIN_BACKWARD, GPIO.LOW)
         GPIO.output(PIN_LEFT, GPIO.LOW)
         GPIO.output(PIN_RIGHT, GPIO.LOW)
+
         if direction == "forward":
             GPIO.output(PIN_FORWARD, GPIO.HIGH)
         elif direction == "backward":
@@ -123,7 +155,12 @@ def move_robot(direction):
             GPIO.output(PIN_LEFT, GPIO.HIGH)
         elif direction == "right":
             GPIO.output(PIN_RIGHT, GPIO.HIGH)
+        elif direction == "stop":
+            pass
+        else:
+            print(f"Unknown GPIO direction command received: {direction}")
     else:
+        # Non-Pi dev mode
         print(f"Simulated move: {direction}")
 
 @app.route('/move/<direction>', methods=['POST'])
